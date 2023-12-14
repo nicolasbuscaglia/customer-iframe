@@ -3,7 +3,8 @@ import { useEffect, useRef, useState } from "react";
 
 const IframeTester = () => {
   const iframeRef = useRef();
-  const [tokens, setTokens] = useState();
+  const [accessToken, setAccessToken] = useState();
+  const [clientId, setClientId] = useState();
   const [caseId, setCaseId] = useState();
   const [chatId, setChatId] = useState();
   const [isLoading, setIsLoading] = useState(true);
@@ -29,7 +30,7 @@ const IframeTester = () => {
         }
         return response.json();
       });
-      setTokens(response);
+      setAccessToken(response.accessToken);
     } catch (err) {
       console.log("ERROR:", err);
     }
@@ -37,24 +38,10 @@ const IframeTester = () => {
 
   const onSubmitHandler = (e) => {
     e.preventDefault();
-    setCaseId(e.target[0].value);
-    setChatId(e.target[1].value);
-    if (caseId && chatId) {
-      iframeRef.current.contentWindow.postMessage(
-        tokens,
-        process.env.NEXT_PUBLIC_THRUAI_BASE_URL
-      );
-    }
+    setClientId(e.target[0].value);
+    setCaseId(e.target[1].value);
+    setChatId(e.target[2].value);
   };
-
-  useEffect(() => {
-    if (!isLoading && tokens) {
-      iframeRef.current.contentWindow.postMessage(
-        tokens,
-        process.env.NEXT_PUBLIC_THRUAI_BASE_URL
-      );
-    }
-  }, [isLoading]);
 
   return (
     <div
@@ -69,7 +56,7 @@ const IframeTester = () => {
       <p style={{ fontSize: "1.3rem", fontWeight: 700, marginBottom: "1rem" }}>
         Customer site
       </p>
-      {!tokens && (
+      {!accessToken && (
         <form onSubmit={onSubmitCredentialsHandler}>
           <div
             style={{ display: "flex", flexDirection: "column", padding: 10 }}
@@ -86,12 +73,14 @@ const IframeTester = () => {
           </div>
         </form>
       )}
-      {tokens && (
+      {accessToken && (
         <form onSubmit={onSubmitHandler} disabled>
           <div
             style={{ display: "flex", flexDirection: "column", padding: 10 }}
           >
             <div style={{ display: "flex", gap: 5 }}>
+              <label htmlFor="client">Client ID:</label>
+              <input name="client" />
               <label htmlFor="case">Case ID:</label>
               <input name="case" />
               <label htmlFor="chat">Chat ID:</label>
@@ -103,10 +92,10 @@ const IframeTester = () => {
           </div>
         </form>
       )}
-      {caseId && chatId && (
+      {accessToken && clientId && caseId && chatId && (
         <iframe
           ref={iframeRef}
-          src={`${process.env.NEXT_PUBLIC_THRUAI_BASE_URL}/iframe/${caseId}/${chatId}`}
+          src={`${process.env.NEXT_PUBLIC_THRUAI_BASE_URL}/iframe/${clientId}/${caseId}/${chatId}?accessToken=${accessToken}`}
           width="500px"
           height="500px"
           onLoad={() => setIsLoading(false)}
